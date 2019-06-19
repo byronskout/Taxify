@@ -7,6 +7,7 @@ const port = 3000;
 let taxiSocket = null;
 let passengerSocket = null;
 
+
 io.on("connection", socket => {
   console.log("a user connected :D");
   socket.on("taxiRequest", taxiRoute => {
