@@ -23,7 +23,6 @@ export default class Driver extends Component {
       latitude: 0,
       longitude: 0,
       destination: "",
-      predictions: [],
       pointCoords: [],
       lookingForPassengers: false
     };
@@ -59,8 +58,7 @@ export default class Driver extends Component {
       });
       this.setState({
         pointCoords,
-        predictions: [],
-        destination: destinationName
+        predictions: []
       });
       this.map.fitToCoordinates(pointCoords);
     } catch (error) {
@@ -78,11 +76,11 @@ export default class Driver extends Component {
       socket.emit("lookForPassenger")
     })
 
-    socket.on("taxiRequest", (routeResponse) => {
+    socket.on("taxiRequest", routeResponse => {
       console.log(routeResponse)
+      this.getRouteDirections(routeResponse.geocoded_waypoints[0].place_id);
     })
   }
-
 
   render() {
     let marker = null;
