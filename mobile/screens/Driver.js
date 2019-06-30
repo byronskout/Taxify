@@ -13,6 +13,7 @@ import MapView, { Polyline, Marker } from "react-native-maps";
 import apiKey from "../google_api_key";
 import _ from "lodash";
 import PolyLine from "@mapbox/polyline";
+import socketIO from "socket.io-client";
 
 export default class Driver extends Component {
   constructor(props) {
@@ -41,7 +42,7 @@ export default class Driver extends Component {
     );
   }
 
-  async getRouteDirections(destinationPlaceId, destinationName) {
+  async getRouteDirections(destinationPlaceId) {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${
@@ -70,6 +71,15 @@ export default class Driver extends Component {
   async lookForPassenger() {
     this.setState({
       lookingForPassengers: true
+    });
+    const socket = socketIO.connect("http://192.168.1.11:3000");
+
+    socket.on("connect", () => {
+      socket.emit("lookForPassenger")
+    })
+
+    socket.on("taxiRequest", (routeResponse) => {
+      console.log(routeResponse)
     })
   }
 

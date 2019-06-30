@@ -23,7 +23,7 @@ io.on("connection", socket => {
     passengerSocket.emit("driverLocation", driverLocation);
   });
 
-  socket.on("passengerRequest", () => {
+  socket.on("lookForPassenger", () => {
     console.log("Someone wants a passenger!");
     taxiSocket = socket;
   });
