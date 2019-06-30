@@ -5,7 +5,9 @@ import {
   Text,
   View,
   Keyboard,
-  TouchableHighlight
+  TouchableHighlight,
+  TouchableOpacity,
+  ActivityIndicator
 } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import apiKey from "../google_api_key";
@@ -21,7 +23,8 @@ export default class Driver extends Component {
       longitude: 0,
       destination: "",
       predictions: [],
-      pointCoords: []
+      pointCoords: [],
+      lookingForPassengers: false
     };
   }
 
@@ -64,6 +67,12 @@ export default class Driver extends Component {
     }
   }
 
+  async lookForPassenger() {
+    this.setState({
+      lookingForPassengers: true
+    })
+  }
+
 
   render() {
     let marker = null;
@@ -99,6 +108,17 @@ export default class Driver extends Component {
           />
           {marker}
         </MapView>
+        <TouchableOpacity onPress={() => this.lookForPassenger()} style={styles.bottomButton}>
+        <View>
+        <Text style={styles.bottomButtonText}>FIND PASSENGER</Text>
+        {this.state.lookingForPassengers === true ? (
+        <ActivityIndicator
+        animating={this.state.lookingForPassengers}
+        size="large"
+        />
+      ) : null}
+        </View>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -107,6 +127,19 @@ export default class Driver extends Component {
 
 
 const styles = StyleSheet.create({
+  bottomButton: {
+    backgroundColor: "black",
+    marginTop: "auto",
+    margin: 20,
+    padding: 15,
+    paddingLeft: 30,
+    paddingRight: 30,
+    alignSelf: "center"
+  },
+  bottomButtonText: {
+    color: "white",
+    fontSize: 20
+  },
   suggestions: {
     backgroundColor: "white",
     padding: 5,
