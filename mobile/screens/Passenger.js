@@ -108,7 +108,7 @@ export default class Passenger extends Component {
     });
 
     socket.on("driverLocation", driverLocation => {
-      const pointCoords = this.state.pointCoords;
+      let pointCoords = this.state.pointCoords;
       pointCoords.push(driverLocation);
       this.map.fitToCoordinates(pointCoords, {
         edgePadding: { top: 20, bottom: 20, left: 20, right: 20 }
