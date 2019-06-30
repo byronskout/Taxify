@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator, Linking, Platform } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import Button from "../components/Button";
 import apiKey from "../google_api_key";
@@ -93,6 +93,22 @@ export default class Driver extends Component {
       latitude: this.state.latitude,
       longitude: this.state.longitude
     });
+
+    const passengerLocation = this.state.pointCoords[
+      this.state.pointCoords.length - 1
+    ];
+
+    if (Platform.OS === "ios") {
+      Linking.openURL(`http://maps.apple.com/?daddr=${passengerLocation.latitude},${
+        passengerLocation.longitude}`
+      );
+    } else {
+      Linking.openURL(
+        `https://www,google.com/dir/?api1&destination=${
+          passengerLocation.latitude
+        },${passengerLocation.longitude}`
+      );
+    }
   }
 
   render() {
