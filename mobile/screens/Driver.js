@@ -1,10 +1,12 @@
 import React, { Component } from "react";
-import { StyleSheet, View, Image, ActivityIndicator, Linking, Platform } from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator, Linking, Platform, Alert } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import Button from "../components/Button";
 import apiKey from "../google_api_key";
 import PolyLine from "@mapbox/polyline";
 import socketIO from "socket.io-client";
+import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+
 
 export default class Driver extends Component {
   constructor(props) {
@@ -34,7 +36,32 @@ export default class Driver extends Component {
       error => console.error(error),
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
     );
+    BackgroundGeolocation.configure({
+     desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
+     stationaryRadius: 50,
+     distanceFilter: 50,
+     debug: false,
+     startOnBoot: false,
+     stopOnTerminate: true,
+     locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+     interval: 10000,
+     fastestInterval: 5000,
+     activitiesInterval: 10000,
+     stopOnStillActivity: false,
+   });
+
+   BackgroundGeolocation.on('authorization', (status) => {
+  console.log('[INFO] BackgroundGeolocation authorization status: ' + status);
+  if (status !== BackgroundGeolocation.AUTHORIZED) {
+    // we need to set delay or otherwise alert may not be shown
+    setTimeout(() =>
+      Alert.alert('App requires location tracking permission', 'Would you like to open app settings?', [
+        { text: 'Yes', onPress: () => BackgroundGeolocation.showAppSettings() },
+        { text: 'No', onPress: () => console.log('No Pressed'), style: 'cancel' }
+      ]), 1000);
   }
+ });
+}
 
   async getRouteDirections(destinationPlaceId) {
     try {
@@ -88,15 +115,26 @@ export default class Driver extends Component {
   }
 
   acceptPassengerRequest() {
-    //Send driver location to passenger
-    this.socket.emit("driverLocation", {
-      latitude: this.state.latitude,
-      longitude: this.state.longitude
-    });
 
     const passengerLocation = this.state.pointCoords[
       this.state.pointCoords.length - 1
     ];
+
+    BackgroundGeolocation.on('location', (location) => {
+      //Send to socket io
+      //Send driver location to passenger
+      this.socket.emit("driverLocation", {
+        latitude: location.latitude,
+        longitude: location.longitude
+      });
+    });
+
+   BackgroundGeolocation.checkStatus(status => {
+    // you don't need to check status before start (this is just the example)
+    if (!status.isRunning) {
+      BackgroundGeolocation.start(); //triggers start on start event
+    }
+  });
 
     if (Platform.OS === "ios") {
       Linking.openURL(`http://maps.apple.com/?daddr=${passengerLocation.latitude},${
