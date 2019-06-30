@@ -82,7 +82,7 @@ export default class Driver extends Component {
       this.getRouteDirections(routeResponse.geocoded_waypoints[0].place_id);
       this.setState({
         lookingForPassengers: false,
-        buttonText: "PASSENGER FOUND!"
+        buttonText: "PASSENGER FOUND!            TAP TO ACCEPT"
       });
     });
   }

@@ -13,6 +13,7 @@ import apiKey from "../google_api_key";
 import _ from "lodash";
 import PolyLine from "@mapbox/polyline";
 import socketIO from 'socket.io-client';
+import Button from '../components/Button';
 
 export default class Passenger extends Component {
   constructor(props) {
@@ -111,13 +112,12 @@ export default class Passenger extends Component {
       );
 
       driverButton = (
-        <TouchableOpacity onPress={() => this.requestDriver()} style={styles.bottomButton}>
-        <View>
-        <Text style={styles.bottomButtonText}>FIND DRIVER</Text>
-        </View>
-        </TouchableOpacity>
-      )
-    }
+        <Button
+         onPress={() => this.requestDriver()}
+         buttonText="REQUEST RIDE"
+         />
+      );
+}
 
     const predictions = this.state.predictions.map(prediction => (
       <TouchableHighlight
@@ -178,19 +178,6 @@ export default class Passenger extends Component {
 }
 
 const styles = StyleSheet.create({
-  bottomButton: {
-    backgroundColor: "black",
-    marginTop: "auto",
-    margin: 20,
-    padding: 15,
-    paddingLeft: 30,
-    paddingRight: 30,
-    alignSelf: "center"
-  },
-  bottomButtonText: {
-    color: "white",
-    fontSize: 20
-  },
   suggestions: {
     backgroundColor: "white",
     padding: 5,
