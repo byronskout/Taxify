@@ -12,8 +12,8 @@ export default class Driver extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: 0,
-      longitude: 0,
+      latitude: null,
+      longitude: null,
       destination: "",
       predictions: [],
       pointCoords: [],
@@ -24,9 +24,13 @@ export default class Driver extends Component {
     this.socket = null;
   }
 
+  componentWillUnmount() {
+    navigator.geolocation.clearWatch(this.watchId);
+  }
+
   componentDidMount() {
     //Get current location and set initial region to this
-    navigator.geolocation.getCurrentPosition(
+    this.watchId = navigator.geolocation.watchPosition(
       position => {
         this.setState({
           latitude: position.coords.latitude,
@@ -155,6 +159,8 @@ export default class Driver extends Component {
     let findingPassengerActIndicator = null;
     let passengerSearchText = "FIND PASSENGERS 👥";
     let bottomButtonFunction = this.findPassengers;
+
+    if (this.state.latitude === null) return null;
 
     if (this.state.lookingForPassengers) {
       passengerSearchText = "FINDING PASSENGERS...";
