@@ -1,5 +1,7 @@
 import React, { Component } from "react";
-
+import { Keyboard } from "react-native";
+import PolyLine from "@mapbox/polyline";
+import apiKey from "../google_api_key";
 
 function genericContainer(WrappedComponent) {
   return class extends Component {
@@ -7,8 +9,12 @@ function genericContainer(WrappedComponent) {
       super(props);
       this.state = {
         latitude: null,
-        longitude: null
+        longitude: null,
+        pointCoords: [],
+        destination: "",
+        routeResponse: {}
       };
+      this.getRouteDirections = this.getRouteDirections.bind(this);
     }
 
     componentDidMount() {
@@ -29,10 +35,40 @@ function genericContainer(WrappedComponent) {
       navigator.geolocation.clearWatch(this.watchId);
     }
 
+  async getRouteDirections(destinationPlaceId, destinationName) {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${
+          this.state.latitude
+        },${
+          this.state.longitude
+        }&destination=place_id:${destinationPlaceId}&key=${apiKey}`
+      );
+      const json = await response.json();
+      console.log(json);
+      const points = PolyLine.decode(json.routes[0].overview_polyline.points);
+      const pointCoords = points.map(point => {
+        return { latitude: point[0], longitude: point[1] };
+      });
+      this.setState({
+        pointCoords,
+        routeResponse: json
+      });
+      Keyboard.dismiss();
+      return destinationName;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
     render() {
       return <WrappedComponent
+      getRouteDirections={this.getRouteDirections}
       latitude={this.state.latitude}
       longitude={this.state.longitude}
+      pointCoords={this.state.pointCoords}
+      destination={this.state.destination}
+      routeResponse={this.state.routeResponse}
       />
     }
   };

@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Keyboard,
   TouchableHighlight,
   ActivityIndicator,
   Image
@@ -12,7 +11,6 @@ import {
 import MapView, { Polyline, Marker } from "react-native-maps";
 import apiKey from "../google_api_key";
 import _ from "lodash";
-import PolyLine from "@mapbox/polyline";
 import socketIO from "socket.io-client";
 import Button from "../components/Button";
 
@@ -20,12 +18,10 @@ export default class Passenger extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      destination: "",
-      predictions: [],
-      pointCoords: [],
-      routeResponse: {},
       lookingForDriver: false,
-      driverIsOnTheWay: false
+      driverIsOnTheWay: false,
+      predictions: []
+
     };
     this.onChangeDestinationDebounced = _.debounce(
       this.onChangeDestination,
@@ -88,11 +84,11 @@ export default class Passenger extends Component {
     socket.on("connect", () => {
       console.log("client connected");
       //Request a taxi!
-      socket.emit("taxiRequest", this.state.routeResponse);
+      socket.emit("taxiRequest", this.props.routeResponse);
     });
 
     socket.on("driverLocation", driverLocation => {
-      const pointCoords = [...this.state.pointCoords, driverLocation];
+      const pointCoords = [...this.props.pointCoords, driverLocation];
       this.map.fitToCoordinates(pointCoords, {
         edgePadding: { top: 50, bottom: 20, left: 20, right: 20 }
       });
@@ -132,10 +128,10 @@ export default class Passenger extends Component {
       )
     }
 
-    if (this.state.pointCoords.length > 1) {
+    if (this.props.pointCoords.length > 1) {
       marker = (
         <Marker
-          coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
+          coordinate={this.props.pointCoords[this.props.pointCoords.length - 1]}
         />
       );
       getDriver = (
@@ -150,12 +146,16 @@ export default class Passenger extends Component {
 
     const predictions = this.state.predictions.map(prediction => (
       <TouchableHighlight
-        onPress={() =>
-          this.getRouteDirections(
+        onPress={async () => {
+          const destinationName = await this.props.getRouteDirections(
             prediction.place_id,
             prediction.structured_formatting.main_text
-          )
-        }
+          );
+          this.setState({ predictions: [], destination: destinationName });
+          this.map.fitToCoordinates(this.props.pointCoords, {
+            edgePadding: { top: 20, bottom: 20, left: 20, right: 20 }
+          });
+        }}
         key={prediction.id}
       >
         <View>
@@ -182,7 +182,7 @@ export default class Passenger extends Component {
           showsUserLocation={true}
         >
           <Polyline
-            coordinates={this.state.pointCoords}
+            coordinates={this.props.pointCoords}
             strokeWidth={4}
             strokeColor="red"
           />
@@ -196,7 +196,7 @@ export default class Passenger extends Component {
           clearButtonMode="always"
           onChangeText={destination => {
             console.log(destination);
-            this.setState({ destination, pointCoords: [] });
+            this.setState({ destination });
             this.onChangeDestinationDebounced(destination);
           }}
         />
