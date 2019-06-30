@@ -16,11 +16,15 @@ app.get("/users", (req, res) => {
 });
 
 app.post("/users", async (req, res) => {
+  try {
   console.log(req.body);
   const user = new User(req.body);
-  await user.save();
-  res.send("You saved a user!");
-})
+  const result = await user.save();
+  res.send(result);
+} catch (err) {
+  res.status(500).send(err);
+}
+});
 
 mongoose
 .connect(mongoDbConnectionString, {useNewUrlParser: true})
