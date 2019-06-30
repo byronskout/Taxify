@@ -20,8 +20,8 @@ export default class Passenger extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: 0,
-      longitude: 0,
+      latitude: null,
+      longitude: null,
       destination: "",
       predictions: [],
       pointCoords: [],
@@ -37,7 +37,7 @@ export default class Passenger extends Component {
 
   componentDidMount() {
     //Get current location and set initial region to this
-    navigator.geolocation.getCurrentPosition(
+    this.watchId = navigator.geolocation.watchPosition(
       position => {
         this.setState({
           latitude: position.coords.latitude,
@@ -47,6 +47,10 @@ export default class Passenger extends Component {
       error => console.error(error),
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
     );
+  }
+
+  componentWillUnmount() {
+    navigator.geolocation.clearWatch(this.watchId);
   }
 
   async getRouteDirections(destinationPlaceId, destinationName) {
@@ -110,7 +114,7 @@ export default class Passenger extends Component {
     socket.on("driverLocation", driverLocation => {
       const pointCoords = [...this.state.pointCoords, driverLocation];
       this.map.fitToCoordinates(pointCoords, {
-        edgePadding: { top: 30, bottom: 20, left: 20, right: 20 }
+        edgePadding: { top: 50, bottom: 20, left: 20, right: 20 }
       });
       this.setState({
         lookingForDriver: false,
@@ -125,6 +129,8 @@ export default class Passenger extends Component {
     let getDriver = null;
     let findingDriverActIndicator = null;
     let driverMarker = null;
+
+    if (this.state.latitude === null) return null;
 
     if (this.state.driverIsOnTheWay) {
       driverMarker = (
