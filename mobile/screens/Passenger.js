@@ -6,25 +6,26 @@ import {
   View,
   Keyboard,
   TouchableHighlight,
-  TouchableOpacity
+  ActivityIndicator
 } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import apiKey from "../google_api_key";
 import _ from "lodash";
 import PolyLine from "@mapbox/polyline";
-import socketIO from 'socket.io-client';
-import Button from '../components/Button';
+import socketIO from "socket.io-client";
+import Button from "../components/Button";
 
 export default class Passenger extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: "",
       latitude: 0,
       longitude: 0,
       destination: "",
       predictions: [],
-      pointCoords: []
+      pointCoords: [],
+      routeResponse: {},
+      lookingForDriver: false
     };
     this.onChangeDestinationDebounced = _.debounce(
       this.onChangeDestination,
@@ -67,7 +68,10 @@ export default class Passenger extends Component {
         destination: destinationName,
         routeResponse: json
       });
-      this.map.fitToCoordinates(pointCoords);
+      Keyboard.dismiss();
+      this.map.fitToCoordinates(pointCoords, {
+        edgePadding: { top: 20, bottom: 20, left: 20, right: 20 }
+      });
     } catch (error) {
       console.error(error);
     }
@@ -77,7 +81,7 @@ export default class Passenger extends Component {
     const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}
     &input=${destination}&location=${this.state.latitude},${
       this.state.longitude
-    }&radius=1000`;
+    }&radius=2000`;
     console.log(apiUrl);
     try {
       const result = await fetch(apiUrl);
@@ -92,32 +96,45 @@ export default class Passenger extends Component {
   }
 
   async requestDriver() {
-    const socket = socketIO.connect("http://192.168.1.11:3000");
+    this.setState({ lookingForDriver: true})
+    var socket = socketIO.connect("http://192.168.1.11:3000");
 
     socket.on("connect", () => {
-      console.log("client connected")
+      console.log("client connected");
+      //Request a taxi!
       socket.emit("taxiRequest", this.state.routeResponse);
-    })
+    });
   }
 
   render() {
     let marker = null;
-    let driverButton = null;
+    let getDriver = null;
+    let findingDriverActIndicator = null;
 
-    if(this.state.pointCoords.length > 1) {
+    if (this.state.lookingForDriver) {
+      findingDriverActIndicator = (
+        <ActivityIndicator
+        size="large"
+        animating={this.state.lookingForDriver}
+        />
+      )
+    }
+
+    if (this.state.pointCoords.length > 1) {
       marker = (
         <Marker
-        coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
+          coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
         />
       );
-
-      driverButton = (
+      getDriver = (
         <Button
-         onPress={() => this.requestDriver()}
-         buttonText="REQUEST RIDE"
-         />
+          onPressFunction={() => this.requestDriver()}
+          buttonText="REQUEST 🚕"
+        >
+        {findingDriverActIndicator}
+        </Button>
       );
-}
+    }
 
     const predictions = this.state.predictions.map(prediction => (
       <TouchableHighlight
@@ -166,18 +183,32 @@ export default class Passenger extends Component {
           clearButtonMode="always"
           onChangeText={destination => {
             console.log(destination);
-            this.setState({ destination });
+            this.setState({ destination, pointCoords: [] });
             this.onChangeDestinationDebounced(destination);
           }}
         />
         {predictions}
-        {driverButton}
+        {getDriver}
       </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  findDriver: {
+    backgroundColor: "black",
+    marginTop: "auto",
+    margin: 20,
+    padding: 15,
+    paddingLeft: 30,
+    paddingRight: 30,
+    alignSelf: "center"
+  },
+  findDriverText: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "600"
+  },
   suggestions: {
     backgroundColor: "white",
     padding: 5,

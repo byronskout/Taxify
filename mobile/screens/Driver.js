@@ -1,17 +1,8 @@
 import React, { Component } from "react";
-import {
-  TextInput,
-  StyleSheet,
-  Text,
-  View,
-  Keyboard,
-  TouchableHighlight,
-  TouchableOpacity,
-  ActivityIndicator
-} from "react-native";
+import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
+import Button from "../components/Button";
 import apiKey from "../google_api_key";
-import _ from "lodash";
 import PolyLine from "@mapbox/polyline";
 import socketIO from "socket.io-client";
 
@@ -19,17 +10,17 @@ export default class Driver extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      error: "",
       latitude: 0,
       longitude: 0,
       destination: "",
+      predictions: [],
       pointCoords: [],
-      lookingForPassengers: false,
-      buttonText: "FIND PASSENGER"
+      lookingForPassengers: false
     };
   }
 
   componentDidMount() {
+    //Get current location and set initial region to this
     navigator.geolocation.getCurrentPosition(
       position => {
         this.setState({
@@ -59,45 +50,72 @@ export default class Driver extends Component {
       });
       this.setState({
         pointCoords,
-        predictions: []
+        routeResponse: json
       });
-      this.map.fitToCoordinates(pointCoords);
+      this.map.fitToCoordinates(pointCoords, {
+        edgePadding: { top: 20, bottom: 20, left: 20, right: 20 }
+      });
     } catch (error) {
       console.error(error);
     }
   }
 
-  async lookForPassenger() {
-    this.setState({
-      lookingForPassengers: true
-    });
-    const socket = socketIO.connect("http://192.168.1.11:3000");
+  findPassengers() {
+    if (!this.state.lookingForPassengers) {
+      this.setState({ lookingForPassengers: true });
 
-    socket.on("connect", () => {
-      socket.emit("lookForPassenger")
-    })
+      console.log(this.state.lookingForPassengers);
 
-    socket.on("taxiRequest", routeResponse => {
-      console.log(routeResponse)
-      this.getRouteDirections(routeResponse.geocoded_waypoints[0].place_id);
-      this.setState({
-        lookingForPassengers: false,
-        buttonText: "PASSENGER FOUND!            TAP TO ACCEPT"
+      var socket = socketIO.connect("http://192.168.1.11:3000");
+
+      socket.on("connect", () => {
+        socket.emit("passengerRequest");
       });
-    });
+
+      socket.on("taxiRequest", routeResponse => {
+        console.log(routeResponse);
+        this.setState({
+          lookingForPassengers: false,
+          passengerFound: true,
+          routeResponse
+        });
+        this.getRouteDirections(routeResponse.geocoded_waypoints[0].place_id);
+      });
+    }
   }
 
   render() {
-    let marker = null;
+    let endMarker = null;
+    let startMarker = null;
+    let findingPassengerActIndicator = null;
+    let passengerSearchText = "FIND PASSENGERS 👥";
 
-    if(this.state.pointCoords.length > 1) {
-      marker = (
-        <Marker
-        coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
+    if (this.state.lookingForPassengers) {
+      passengerSearchText = "FINDING PASSENGERS...";
+      findingPassengerActIndicator = (
+        <ActivityIndicator
+          size="large"
+          animating={this.state.lookingForPassengers}
         />
       );
     }
 
+    if (this.state.passengerFound) {
+      passengerSearchText = "FOUND PASSENGER! ACCEPT RIDE?";
+    }
+
+    if (this.state.pointCoords.length > 1) {
+      endMarker = (
+        <Marker
+          coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
+        >
+          <Image
+            style={{ width: 40, height: 40 }}
+            source={require("../images/person-marker.png")}
+          />
+        </Marker>
+      );
+    }
 
     return (
       <View style={styles.container}>
@@ -119,28 +137,24 @@ export default class Driver extends Component {
             strokeWidth={4}
             strokeColor="red"
           />
-          {marker}
+          {endMarker}
+          {startMarker}
         </MapView>
-        <TouchableOpacity onPress={() => this.lookForPassenger()} style={styles.bottomButton}>
-        <View>
-        <Text style={styles.bottomButtonText}>{this.state.buttonText}</Text>
-        {this.state.lookingForPassengers === true ? (
-        <ActivityIndicator
-        animating={this.state.lookingForPassengers}
-        size="large"
-        />
-      ) : null}
-        </View>
-        </TouchableOpacity>
+        <Button
+          onPressFunction={() => {
+            this.findPassengers();
+          }}
+          buttonText={passengerSearchText}
+        >
+          {findingPassengerActIndicator}
+        </Button>
       </View>
     );
   }
 }
 
-
-
 const styles = StyleSheet.create({
-  bottomButton: {
+  findDriver: {
     backgroundColor: "black",
     marginTop: "auto",
     margin: 20,
@@ -149,9 +163,10 @@ const styles = StyleSheet.create({
     paddingRight: 30,
     alignSelf: "center"
   },
-  bottomButtonText: {
+  findDriverText: {
+    fontSize: 20,
     color: "white",
-    fontSize: 20
+    fontWeight: "600"
   },
   suggestions: {
     backgroundColor: "white",
