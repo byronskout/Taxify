@@ -24,7 +24,8 @@ export default class Driver extends Component {
       longitude: 0,
       destination: "",
       pointCoords: [],
-      lookingForPassengers: false
+      lookingForPassengers: false,
+      buttonText: "FIND PASSENGER"
     };
   }
 
@@ -79,7 +80,11 @@ export default class Driver extends Component {
     socket.on("taxiRequest", routeResponse => {
       console.log(routeResponse)
       this.getRouteDirections(routeResponse.geocoded_waypoints[0].place_id);
-    })
+      this.setState({
+        lookingForPassengers: false,
+        buttonText: "PASSENGER FOUND!"
+      });
+    });
   }
 
   render() {
@@ -118,7 +123,7 @@ export default class Driver extends Component {
         </MapView>
         <TouchableOpacity onPress={() => this.lookForPassenger()} style={styles.bottomButton}>
         <View>
-        <Text style={styles.bottomButtonText}>FIND PASSENGER</Text>
+        <Text style={styles.bottomButtonText}>{this.state.buttonText}</Text>
         {this.state.lookingForPassengers === true ? (
         <ActivityIndicator
         animating={this.state.lookingForPassengers}
