@@ -23,14 +23,9 @@ export default class Driver extends Component {
       predictions: [],
       pointCoords: []
     };
-    this.onChangeDestinationDebounced = _.debounce(
-      this.onChangeDestination,
-      1000
-    );
   }
 
   componentDidMount() {
-    //Get current location and set initial region to this
     navigator.geolocation.getCurrentPosition(
       position => {
         this.setState({
@@ -69,23 +64,6 @@ export default class Driver extends Component {
     }
   }
 
-  async onChangeDestination(destination) {
-    const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}
-    &input=${destination}&location=${this.state.latitude},${
-      this.state.longitude
-    }&radius=1000`;
-    console.log(apiUrl);
-    try {
-      const result = await fetch(apiUrl);
-      const json = await result.json();
-      this.setState({
-        predictions: json.predictions
-      });
-      console.log(json);
-    } catch (err) {
-      console.error(err);
-    }
-  }
 
   render() {
     let marker = null;
@@ -98,23 +76,6 @@ export default class Driver extends Component {
       );
     }
 
-    const predictions = this.state.predictions.map(prediction => (
-      <TouchableHighlight
-        onPress={() =>
-          this.getRouteDirections(
-            prediction.place_id,
-            prediction.structured_formatting.main_text
-          )
-        }
-        key={prediction.id}
-      >
-        <View>
-          <Text style={styles.suggestions}>
-            {prediction.structured_formatting.main_text}
-          </Text>
-        </View>
-      </TouchableHighlight>
-    ));
 
     return (
       <View style={styles.container}>
@@ -138,18 +99,6 @@ export default class Driver extends Component {
           />
           {marker}
         </MapView>
-        <TextInput
-          placeholder="Enter destination..."
-          style={styles.destinationInput}
-          value={this.state.destination}
-          clearButtonMode="always"
-          onChangeText={destination => {
-            console.log(destination);
-            this.setState({ destination });
-            this.onChangeDestinationDebounced(destination);
-          }}
-        />
-        {predictions}
       </View>
     );
   }
