@@ -63,7 +63,8 @@ export default class Passenger extends Component {
       this.setState({
         pointCoords,
         predictions: [],
-        destination: destinationName
+        destination: destinationName,
+        routeResponse: json
       });
       this.map.fitToCoordinates(pointCoords);
     } catch (error) {
@@ -94,7 +95,7 @@ export default class Passenger extends Component {
 
     socket.on("connect", () => {
       console.log("client connected")
-
+      socket.emit("taxiRequest", this.state.routeResponse);
     })
   }
 

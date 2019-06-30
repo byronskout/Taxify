@@ -10,11 +10,11 @@ let passengerSocket = null;
 
 io.on("connection", socket => {
   console.log("a user connected :D");
-  socket.on("taxiRequest", taxiRoute => {
+  socket.on("taxiRequest", routeResponse => {
     passengerSocket = socket;
     console.log("Someone wants a taxi!");
     if (taxiSocket !== null) {
-      taxiSocket.emit("taxiRequest", taxiRoute);
+      taxiSocket.emit("taxiRequest", routeResponse);
     }
   });
 
