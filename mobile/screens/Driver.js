@@ -12,8 +12,6 @@ export default class Driver extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: null,
-      longitude: null,
       destination: "",
       predictions: [],
       pointCoords: [],
@@ -24,22 +22,7 @@ export default class Driver extends Component {
     this.socket = null;
   }
 
-  componentWillUnmount() {
-    navigator.geolocation.clearWatch(this.watchId);
-  }
-
   componentDidMount() {
-    //Get current location and set initial region to this
-    this.watchId = navigator.geolocation.watchPosition(
-      position => {
-        this.setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-      },
-      error => console.log(error),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
-    );
     BackgroundGeolocation.configure({
      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
      stationaryRadius: 50,
@@ -71,9 +54,9 @@ export default class Driver extends Component {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${
-          this.state.latitude
+          this.props.latitude
         },${
-          this.state.longitude
+          this.props.longitude
         }&destination=place_id:${destinationPlaceId}&key=${apiKey}`
       );
       const json = await response.json();
@@ -160,7 +143,7 @@ export default class Driver extends Component {
     let passengerSearchText = "FIND PASSENGERS 👥";
     let bottomButtonFunction = this.findPassengers;
 
-    if (this.state.latitude === null) return null;
+    if (this.props.latitude === null) return null;
 
     if (this.state.lookingForPassengers) {
       passengerSearchText = "FINDING PASSENGERS...";
@@ -198,8 +181,8 @@ export default class Driver extends Component {
           }}
           style={styles.map}
           initialRegion={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
+            latitude: this.props.latitude,
+            longitude: this.props.longitude,
             latitudeDelta: 0.015,
             longitudeDelta: 0.0121
           }}

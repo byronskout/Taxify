@@ -20,8 +20,6 @@ export default class Passenger extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      latitude: null,
-      longitude: null,
       destination: "",
       predictions: [],
       pointCoords: [],
@@ -35,31 +33,13 @@ export default class Passenger extends Component {
     );
   }
 
-  componentDidMount() {
-    //Get current location and set initial region to this
-    this.watchId = navigator.geolocation.watchPosition(
-      position => {
-        this.setState({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-      },
-      error => console.log(error),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
-    );
-  }
-
-  componentWillUnmount() {
-    navigator.geolocation.clearWatch(this.watchId);
-  }
-
   async getRouteDirections(destinationPlaceId, destinationName) {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/directions/json?origin=${
-          this.state.latitude
+          this.props.latitude
         },${
-          this.state.longitude
+          this.props.longitude
         }&destination=place_id:${destinationPlaceId}&key=${apiKey}`
       );
       const json = await response.json();
@@ -85,8 +65,8 @@ export default class Passenger extends Component {
 
   async onChangeDestination(destination) {
     const apiUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?key=${apiKey}
-    &input=${destination}&location=${this.state.latitude},${
-      this.state.longitude
+    &input=${destination}&location=${this.props.latitude},${
+      this.props.longitude
     }&radius=2000`;
     console.log(apiUrl);
     try {
@@ -130,7 +110,7 @@ export default class Passenger extends Component {
     let findingDriverActIndicator = null;
     let driverMarker = null;
 
-    if (this.state.latitude === null) return null;
+    if (this.props.latitude === null) return null;
 
     if (this.state.driverIsOnTheWay) {
       driverMarker = (
@@ -194,8 +174,8 @@ export default class Passenger extends Component {
           }}
           style={styles.map}
           initialRegion={{
-            latitude: this.state.latitude,
-            longitude: this.state.longitude,
+            latitude: this.props.latitude,
+            longitude: this.props.longitude,
             latitudeDelta: 0.015,
             longitudeDelta: 0.0121
           }}
