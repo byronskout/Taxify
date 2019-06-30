@@ -197,7 +197,7 @@ export default class Driver extends Component {
             this.map = map;
           }}
           style={styles.map}
-          region={{
+          initialRegion={{
             latitude: this.state.latitude,
             longitude: this.state.longitude,
             latitudeDelta: 0.015,
