@@ -12,6 +12,7 @@ import MapView, { Polyline, Marker } from "react-native-maps";
 import apiKey from "../google_api_key";
 import _ from "lodash";
 import PolyLine from "@mapbox/polyline";
+import socketIO from 'socket.io-client';
 
 export default class Passenger extends Component {
   constructor(props) {
@@ -88,8 +89,18 @@ export default class Passenger extends Component {
     }
   }
 
+  async requestDriver() {
+    const socket = socketIO.connect("http://192.168.1.11:3000");
+
+    socket.on("connect", () => {
+      console.log("client connected")
+
+    })
+  }
+
   render() {
     let marker = null;
+    let driverButton = null;
 
     if(this.state.pointCoords.length > 1) {
       marker = (
@@ -97,6 +108,14 @@ export default class Passenger extends Component {
         coordinate={this.state.pointCoords[this.state.pointCoords.length - 1]}
         />
       );
+
+      driverButton = (
+        <TouchableOpacity onPress={() => this.requestDriver()} style={styles.bottomButton}>
+        <View>
+        <Text style={styles.bottomButtonText}>FIND DRIVER</Text>
+        </View>
+        </TouchableOpacity>
+      )
     }
 
     const predictions = this.state.predictions.map(prediction => (
@@ -151,11 +170,7 @@ export default class Passenger extends Component {
           }}
         />
         {predictions}
-        <TouchableOpacity style={styles.bottomButton}>
-        <View>
-        <Text style={styles.bottomButtonText}>FIND DRIVER</Text>
-        </View>
-        </TouchableOpacity>
+        {driverButton}
       </View>
     );
   }
