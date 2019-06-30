@@ -37,7 +37,7 @@ export default class Driver extends Component {
           longitude: position.coords.longitude
         });
       },
-      error => console.error(error),
+      error => console.log(error),
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
     );
     BackgroundGeolocation.configure({

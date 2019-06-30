@@ -44,7 +44,7 @@ export default class Passenger extends Component {
           longitude: position.coords.longitude
         });
       },
-      error => console.error(error),
+      error => console.log(error),
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
     );
   }
