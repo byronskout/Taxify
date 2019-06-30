@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Keyboard } from "react-native";
+import { Keyboard, Permission, Platform } from "react-native";
 import PolyLine from "@mapbox/polyline";
 import apiKey from "../google_api_key";
 
@@ -17,8 +17,33 @@ function genericContainer(WrappedComponent) {
       this.getRouteDirections = this.getRouteDirections.bind(this);
     }
 
-    componentDidMount() {
+    async checkAndroidPermissions() {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {
+            title: "Taxify",
+            message: "Taxify needs to use your location to find a taxi"
+          }
+        );
+        if(granted === PermissionsAndroid.RESULTS.GRANTED) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    async componentDidMount() {
       //Get current location and set initial region to this
+      let granted = false;
+      if(Platform.OS === 'ios') {
+        granted = true;
+      } else {
+        granted = await this.checkAndroidPermissions();
+      }
+      if (granted)
       this.watchId = navigator.geolocation.watchPosition(
         position => {
           this.setState({
