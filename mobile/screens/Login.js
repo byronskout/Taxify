@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Text, StyleSheet, View , Platform, Alert } from "react-native";
+import { Text, StyleSheet, View , Platform, Alert, Image } from "react-native";
 import LoginForm from "../components/LoginForm";
 import axios from "axios";
 axios.defaults.baseURL = "http://192.168.1.11:4000"
@@ -49,6 +49,7 @@ export default class Login extends Component {
     return(
       <View style={styles.container}>
       <Text style={styles.headerText}>Taxify</Text>
+      <Image source={require("../images/cab1.png")} style={styles.logo} />
       <LoginForm
       email={this.state.email}
       password={this.state.password}
@@ -81,5 +82,11 @@ const styles = StyleSheet.create({
     marginTop: 70,
     fontWeight: "200",
     paddingBottom: 35
+  },
+  logo: {
+    height: 200,
+    width: 200,
+    alignSelf: "center",
+    marginBottom: 30
   }
 });
