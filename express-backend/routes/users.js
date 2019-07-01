@@ -1,20 +1,9 @@
-const User = require("../model/User");
 const express = require("express");
 const router = express.Router();
+const userController = require("../controllers/users")
 
-router.get("/", (req, res) => {
-  res.send("You fetched a user!");
-});
+router.get("/", userController.getUser);
 
-router.post("/", async (req, res) => {
-  try {
-  console.log(req.body);
-  const user = new User(req.body);
-  const result = await user.save();
-  res.send(result);
-} catch (err) {
-  res.status(500).send(err);
-}
-});
+router.post("/", userController.createUser);
 
 module.exports = router;
