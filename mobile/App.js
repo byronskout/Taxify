@@ -3,6 +3,8 @@ import { StyleSheet, Button, View } from "react-native";
 import Driver from './screens/Driver';
 import Passenger from './screens/Passenger';
 import GenericContainer from './components/GenericContainer';
+import Login from './screens/Login';
+import DriverOrPassenger from './screens/DriverOrPassenger';
 
 const DriverwithGenericContainer = GenericContainer(Driver);
 const PassengerwithGenericContainer = GenericContainer(Passenger);
@@ -12,36 +14,32 @@ export default class App extends Component {
     super(props);
     this.state = {
       isDriver: false,
-      isPassenger: false
+      isPassenger: false,
+      token: ""
     };
+    this.handleChange = this.handleChange.bind(this);
+  }
 
+  handleChange(name, value) {
+    this.setState ({ [name]: value });
   }
 
   render() {
+
+    if(this.state.token === "") {
+      return <Login handleChange={this.handleChange} />
+    }
+
     if(this.state.isDriver) {
-      return <DriverwithGenericContainer/>;
+      return <DriverwithGenericContainer token={this.state.token} />;
     }
 
     if(this.state.isPassenger) {
-      return <PassengerwithGenericContainer/>;
+      return <PassengerwithGenericContainer token={this.state.token} />;
     }
 
     return (
-      <View style={styles.container}>
-      <Button onPress={() => this.setState({ isPassenger: true })}
-      title="Passenger"
-      />
-      <Button onPress={() => this.setState({ isDriver: true })}
-      title="Driver"/>
-      </View>
+      <DriverOrPassenger handleChange={this.handleChange} />
     );
   }
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-  flex: 1,
-  marginTop: 50
-}
-});
