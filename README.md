@@ -1,6 +1,6 @@
 # Taxify
 
-Taxi booking app.
+Taxi booking app. User can log in as a driver or passenger. Passengers can select a pickup point and book a taxi, see live location of the driver.
 
 <h2>Features:</h2>
 
